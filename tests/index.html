@@ -33,6 +33,9 @@
                 var specs = [];
                 specs.push('tests/spec/main');
                 specs.push('tests/spec/readable');
+                specs.push('tests/spec/writable');
+
+                specs.push('tests/spec/array-streams');
                 
                 require(specs, function(){
                     jasmineEnv.execute();

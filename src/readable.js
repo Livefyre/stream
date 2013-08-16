@@ -1,4 +1,5 @@
-define(['stream', 'stream/util'], function (Stream, util) {
+define(['stream', 'stream/util', 'event-emitter'],
+function (Stream, util, EventEmitter) {
     "use strict";
 
     /**
@@ -25,6 +26,161 @@ define(['stream', 'stream/util'], function (Stream, util) {
      * This will be used if none is specified on construction
      */
     var DEFAULT_HIGH_WATER_MARK = 50;
+
+
+    /**
+     * Pulls all the data out of this readable stream, and writes it to the
+     * supplied destination, automatically managing the flow so that the
+     * destination is not overwhelmed by a fast readable stream.
+     * @param dest {Writable} A writable stream that should be written to
+     * @param [pipeOpts] {object} Pipe options
+     * @param [pipeOpts.end=true] {boolean} Whether the writer should be ended
+     *     when the reader ends
+     */
+    Readable.prototype.pipe = function (dest, pipeOpts) {
+        var src = this,
+            state = this._readableState,
+            doEnd,
+            endFn;
+
+        state.pipes.push(dest);
+
+        doEnd = ( ! pipeOpts || pipeOpts.end !== false );
+
+        endFn = doEnd ? onend : cleanup;
+
+        if (state.endEmitted) {
+            util.nextTick(endFn);
+        } else {
+            src.once('end', endFn);
+        }
+
+        dest.on('unpipe', onunpipe);
+        function onunpipe (readable) {
+            // Only if the unpipe was for this readable
+            if (readable === src) {
+                // Cleanup listeners when unpiped
+                cleanup();
+            }
+        }
+
+        // End the writable destination
+        function onend () {
+            dest.end();
+        }
+
+        // when the dest drains, it reduces the awaitDrain counter
+        // on the source.  This would be more elegant with a .once()
+        // handler in flow(), but adding and removing repeatedly is
+        // too slow.
+        var ondrain = this._pipeOnDrain();
+        dest.on('drain', ondrain);
+
+        function cleanup() {
+            // cleanup event handlers once the pipe is broken
+            dest.removeListener('close', onclose);
+            dest.removeListener('finish', onfinish);
+            dest.removeListener('drain', ondrain);
+            dest.removeListener('error', onerror);
+            dest.removeListener('unpipe', onunpipe);
+            src.removeListener('end', onend);
+            src.removeListener('end', cleanup);
+            src.removeListener('data', ondata);
+
+            // if the reader is waiting for a drain event from this
+            // specific writer, then it would cause it to never start
+            // flowing again.
+            // So, if this is awaiting a drain, then we just call it now.
+            // If we don't know, then assume that we are waiting for one.
+            if (state.awaitDrain &&
+               (!dest._writableState || dest._writableState.needDrain)) {
+                ondrain();
+            }
+        }
+
+        src.on('data', ondata);
+        function ondata (chunk) {
+            var ret = dest.write(chunk);
+            if (ret === false) {
+                // We should stop writing, so pause the source readable
+                src._readableState.awaitDrain++;
+                src.pause();
+            }
+        }
+
+        // Unpipe when there is an error in the destination writable
+        function onerror (err) {
+            unpipe();
+            if (EventEmitter.listenerCount(dest, 'error') === 0) {
+                dest.emit('error', err);
+            }
+        }
+        dest.once('error', onerror);
+
+
+        // Both close and finish should trigger unpipe, but only once
+        function onclose () {
+            dest.removeListener('finish', onfinish);
+            unpipe();
+        }
+        dest.once('close', onclose);
+        function onfinish () {
+            dest.removeListener('close', onclose);
+            unpipe();
+        }
+        dest.once('finish', onfinish);
+
+
+        function unpipe () {
+            src.unpipe(dest);
+        }
+
+        // writables should emit 'pipe' when they're being piped to
+        dest.emit('pipe', src);
+
+        if ( ! state.flowing) {
+            // Start the flow so pipe works
+            src.resume();
+        }
+
+        return dest;
+    };
+
+
+    /**
+     * Get a function that will be excuted by a pipe destination
+     * so that this readable continues piping when the writable drains
+     */
+    Readable.prototype._pipeOnDrain = function () {
+        var src = this;
+        return function () {
+            var dest = this,
+                state = src._readableState;
+            if (state.awaitDrain) {
+                state.awaitDrain--;
+            }
+            if (state.awaitDrain === 0 &&
+                EventEmitter.listenerCount(src, 'data')) {
+                state.flowing = true;
+                src._flow();
+            }
+        };
+    };
+
+
+    /**
+     * Continually .read() this Readable until there is nothing
+     * more to read. Calling .read() will emit 'data'
+     */
+    Readable.prototype._flow = function () {
+        var state = this._readableState,
+            chunk;
+        if (state.flowing) {
+            do {
+                chunk = this.read();
+            } while (chunk !== null && state.flowing);
+        }
+    };
 
 
     /**
@@ -141,6 +297,66 @@ define(['stream', 'stream/util'], function (Stream, util) {
 
 
     /**
+     * Resume emitting data events.
+     * This method will switch the stream into flowing-mode. If you do not want
+     * to consume the data from a stream, but you do want to get to its end
+     * event, you can call readable.resume() to open the flow of data.
+     */
+    Readable.prototype.resume = function () {
+        var state = this._readableState;
+        if ( ! state.flowing) {
+            state.flowing = true;
+            // Make sure there's data coming from upstream
+            if ( ! state.reading) {
+                this.read(0);
+            }
+            this._scheduleResume();
+        }
+    };
+
+
+    /**
+     * @private
+     * If not already scheduled, schedule _doResume to execute
+     * on nextTick
+     */
+    Readable.prototype._scheduleResume = function () {
+        var self = this,
+            state = this._readableState;
+        if ( ! state.resumeScheduled) {
+            state.resumeScheduled = true;
+            util.nextTick(function () {
+                self._doResume();
+            });
+        }
+    };
+
+
+    Readable.prototype._doResume = function () {
+        var state = this._readableState;
+        state.resumeScheduled = false;
+        this.emit('resume');
+        this._flow();
+        // Make sure we're getting data from upstream
+        if (state.flowing && ! state.reading) {
+            this.read(0);
+        }
+    };
+
+
+    /**
+     * Stop emitting data events. Any data that becomes available will remain
+     * in the internal buffer.
+     */
+    Readable.prototype.pause = function () {
+        if (this._readableState.flowing !== false) {
+            this._readableState.flowing = false;
+            this.emit('pause');
+        }
+    };
+
+
+    /**
      * Bind an event listener to an event on this stream
      * Readable adds some extra functionality so that binding a listener
      *     to 'readable' marks ._readableState.needReadable=true
@@ -150,6 +366,10 @@ define(['stream', 'stream/util'], function (Stream, util) {
     Readable.prototype.on = function (eventName, cb) {
         var ret = Stream.prototype.on.call(this, eventName, cb),
             state = this._readableState;
+
+        if (eventName === 'data' && (state.flowing !== false)) {
+            this.resume();
+        }
 
         if (eventName === 'readable' && this.readable) {
             // Start reading on the first readable listener
@@ -196,7 +416,11 @@ define(['stream', 'stream/util'], function (Stream, util) {
 
         if (size === 0 && state.needReadable &&
            (state.buffer.length >= state.highWaterMark || state.ended)) {
-            this._emitReadable();
+            if (state.buffer.length === 0 && state.ended) {
+                this._endReadable();
+            } else {
+                this._emitReadable();
+            }
             return null;
         }
 
@@ -215,7 +439,8 @@ define(['stream', 'stream/util'], function (Stream, util) {
 
         // We need to read if this read will lower the buffer size
         // below the highWaterMark
-        if (state.buffer.length - size <= state.highWaterMark) {
+        if (state.buffer.length === 0 ||
+            state.buffer.length - size < state.highWaterMark) {
             doRead = true;
         }
 
@@ -262,6 +487,10 @@ define(['stream', 'stream/util'], function (Stream, util) {
         // that we emit 'end' on the very next tick.
         if (state.ended && !state.endEmitted && state.buffer.length === 0) {
             this._endReadable();
+        }
+
+        if (ret !== null) {
+            this.emit('data', ret);
         }
 
         return ret;
@@ -323,15 +552,21 @@ define(['stream', 'stream/util'], function (Stream, util) {
     Readable.prototype._emitReadable = function () {
         var self = this,
             state = this._readableState;
+
         state.needReadable = false;
-        state.emittedReadable = true;
-        if (state.sync) {
-            util.nextTick(emitReadable);
-        } else {
-            emitReadable();
+
+        if ( ! state.emittedReadable) {
+            state.emittedReadable = true;
+            if (state.sync) {
+                util.nextTick(emitReadable);
+            } else {
+                emitReadable();
+            }
         }
+
         function emitReadable () {
             self.emit('readable');
+            self._flow();
         }
     };
 
@@ -394,9 +629,9 @@ define(['stream', 'stream/util'], function (Stream, util) {
         this.highWaterMark = ~~this.highWaterMark;
 
         this.buffer = [];
-        this.pipes = null;
+        this.pipes = [];
         this.pipesCount = 0;
-        this.flowing = false;
+        this.flowing = null;
         this.ended = false;
         this.endEmitted = false;
         this.reading = false;

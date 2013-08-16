@@ -4,9 +4,9 @@ define(function () {
     var exports = {};
 
     exports.inherits = function(a, b){
-        var fn = function(){};
-        fn.prototype = b.prototype;
-        a.prototype = new fn();
+        var Fn = function(){};
+        Fn.prototype = b.prototype;
+        a.prototype = new Fn();
         a.prototype.constructor = a;
     };
 

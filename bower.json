@@ -6,7 +6,8 @@
   ],
   "dependencies": {
     "requirejs": "~2.1.5",
-    "event-emitter": "https://github.com/Livefyre/event-emitter.git"
+    "event-emitter": "https://github.com/Livefyre/event-emitter.git",
+    "inherits": "git@github.com:gobengo/inherits.git"
   },
   "devDependencies": {
     "jasmine": "*"

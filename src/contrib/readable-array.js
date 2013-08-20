@@ -1,4 +1,4 @@
-define(['stream/readable', 'stream/util'], function (Readable, util) {
+define(['stream/readable', 'inherits'], function (Readable, inherits) {
     "use strict";
 
     /**
@@ -9,7 +9,7 @@ define(['stream/readable', 'stream/util'], function (Readable, util) {
         Readable.call(this);
     }
 
-    util.inherits(ReadableArray, Readable);
+    inherits(ReadableArray, Readable);
 
 
     /**

@@ -1,7 +1,7 @@
 define([
-    'stream/util',
+    'inherits',
     'event-emitter'],
-function (util, EventEmitter) {
+function (inherits, EventEmitter) {
     "use strict";
 
     /**
@@ -10,7 +10,7 @@ function (util, EventEmitter) {
     function Stream (opts) {
         EventEmitter.call(this);
     }
-    util.inherits(Stream, EventEmitter);
+    inherits(Stream, EventEmitter);
 
     return Stream;
 });

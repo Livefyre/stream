@@ -1,5 +1,5 @@
-define(['stream', 'stream/util', 'event-emitter'],
-function (Stream, util, EventEmitter) {
+define(['stream', 'stream/util', 'event-emitter', 'inherits'],
+function (Stream, util, EventEmitter, inherits) {
     "use strict";
 
     /**
@@ -18,7 +18,7 @@ function (Stream, util, EventEmitter) {
         this.readable = true;
         Stream.call(this);
     }
-    util.inherits(Readable, Stream);
+    inherits(Readable, Stream);
 
 
     /**

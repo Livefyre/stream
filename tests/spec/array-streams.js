@@ -2,8 +2,9 @@ define([
     'jasmine',
     'stream/util',
     'stream/contrib/readable-array',
-    'stream/contrib/writable-array'],
-function (jasmine, util, ReadableArray, WritableArray) {
+    'stream/contrib/writable-array',
+    'stream/contrib/string-transform'],
+function (jasmine, util, ReadableArray, WritableArray, StringTransform) {
 
     describe('WritableArray', function () {
         it('can be written to three times', function () {
@@ -42,6 +43,26 @@ function (jasmine, util, ReadableArray, WritableArray) {
             }, 'readable to emit end', 1000);
             runs(function () {
                 expect(writable.get()).toEqual([1,2,3]);
+            });
+        });
+    });
+
+    describe('StringTransform', function () {
+        var stringTransform;
+        beforeEach(function () {
+            stringTransform = new StringTransform();
+        });
+        it('transforms inputs to Strings with pipe', function () {
+            var readable = new ReadableArray([1,2,3]),
+                writable = new WritableArray(),
+                onEndSpy = jasmine.createSpy('onReadableEnd');
+            readable.on('end', onEndSpy);
+            readable.pipe(stringTransform).pipe(writable);
+            waitsFor(function () {
+                return onEndSpy.callCount;
+            }, 'readable to emit end', 1000);
+            runs(function () {
+                expect(writable.get()).toEqual(['1','2','3']);
             });
         });
     });

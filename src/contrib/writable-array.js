@@ -1,4 +1,4 @@
-define(['stream/writable', 'stream/util'], function (Writable, util) {
+define(['stream/writable', 'inherits'], function (Writable, inherits) {
 	"use strict";
 
 
@@ -9,7 +9,7 @@ define(['stream/writable', 'stream/util'], function (Writable, util) {
         this._array = array || [];
         Writable.call(this);
     }
-    util.inherits(WritableArray, Writable);
+    inherits(WritableArray, Writable);
 
     /**
      * @private

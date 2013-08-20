@@ -3,13 +3,6 @@ define(function () {
 
     var exports = {};
 
-    exports.inherits = function(a, b){
-        var Fn = function(){};
-        Fn.prototype = b.prototype;
-        a.prototype = new Fn();
-        a.prototype.constructor = a;
-    };
-
     exports.nextTick = (function () {
         if (typeof setImmediate == 'function') {
             return function(f){ setImmediate(f); };

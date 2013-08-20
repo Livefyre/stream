@@ -1,4 +1,4 @@
-define(['stream', 'stream/util'], function (Stream, util) {
+define(['stream', 'stream/util', 'inherits'], function (Stream, util, inherits) {
 
     function Writable (opts) {
         this.writable = true;
@@ -6,7 +6,7 @@ define(['stream', 'stream/util'], function (Stream, util) {
         Stream.call(this, opts);
     }
 
-    util.inherits(Writable, Stream);
+    inherits(Writable, Stream);
 
 
     Writable.prototype.write = function (chunk, errback) {

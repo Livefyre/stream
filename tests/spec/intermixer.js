@@ -61,10 +61,10 @@ function (jasmine, Stream, Intermixer) {
                     it('streams without inhibition if set to 0', function () {});
                 });
 
-                describe('is piped into a readable stream', function () {
+                describe('is passed to a readable stream.pipe()', function () {
                     it('reads from the stream', function () {});
 
-                    describe('and has a writable stream piped in', function () {
+                    describe('and has .pipe(writable stream)', function () {
                         it('writes to the writable stream each piece of content it reads from the readable stream and increments counter', function () {});
 
                         it('writes one piece of source content for every [interval] number of stream content(s) it reads', function () {});

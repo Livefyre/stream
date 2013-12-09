@@ -1,10 +1,11 @@
-define(['jasmine', 'stream', 'stream/insert', 'stream/writable', 'stream/readable', 'stream/duplex'],
-function (jasmine, Stream, Insert, Writable, Readable, Duplex) {
+define(['jasmine', 'stream', 'stream/insert', 'stream/writable', 'stream/readable', 'stream/duplex', 'stream/passthrough'],
+function (jasmine, Stream, Insert, Writable, Readable, Duplex, PassThrough) {
     describe('stream/insert', function () {
         var sourceStream,
             inserter;
         beforeEach(function () {
-//            sourceStream = 
+            //TODO (joao) Make ths Readable with _read() defined
+            sourceStream = new PassThrough();
         });
             
         it('is a function', function () {
@@ -14,7 +15,8 @@ function (jasmine, Stream, Insert, Writable, Readable, Duplex) {
         it('is a factory for Inserter Objects', function () {
             inserter = Insert(sourceStream);
             
-            expect(inserter instanceof Inserter).toBe(true);
+            //TODO (joao) Test for Inserter, not PassThrough
+            expect(inserter instanceof PassThrough).toBe(true);
         });
 
         it('has a CONSTRUCTOR property containing the constructor function', function () {
@@ -82,7 +84,7 @@ function (jasmine, Stream, Insert, Writable, Readable, Duplex) {
                 });
 
                 it('returns that source stream using .getSource()', function () {
-                    expect(inserter.getSource()).toEqual(jasmine.any(Function));
+                    expect(inserter.getSource).toEqual(jasmine.any(Function));
                     expect(inserter.getSource()).toBe(sourceStream);
                 });
 
@@ -93,7 +95,7 @@ function (jasmine, Stream, Insert, Writable, Readable, Duplex) {
                 });
 
                 it('has isEnabled(), which returns the value of ._enabled', function () {
-                    expect(inserter.isEnabled()).toEqual(jasmine.any(Function));
+                    expect(inserter.isEnabled).toEqual(jasmine.any(Function));
                     expect(inserter.isEnabled()).toBe(true);
                 });
 
@@ -108,13 +110,19 @@ function (jasmine, Stream, Insert, Writable, Readable, Duplex) {
                         inserter.every("3");//string
                         inserter.every(-1);//negative number
                         inserter.every(true);//boolean
-                        inserter.every(function () {})//function
+                        inserter.every(function () {});//function
                         inserter.every({});//object
                         inserter.every(null);//null
                         inserter.every();//undefined
                         inserter.every(NaN);//NaN
                         
                         expect(inserter._interval).toBe(1);//1 is the default
+                    });
+                    
+                    it('returns itself', function () {
+                        var retVal = inserter.every(5);
+                        
+                        expect(retVal).toBe(inserter);
                     });
 
                     it('streams without inhibition if set to 0', function () {throw 'TODO (joao) Write this test.';});
@@ -123,7 +131,8 @@ function (jasmine, Stream, Insert, Writable, Readable, Duplex) {
                 describe('is passed to a readable stream.pipe()', function () {
                     var readStream;
                     beforeEach(function () {
-//                        readStream =
+                        readStream = new Readable();
+                        readStream._read = function () {};
                         readStream.pipe(inserter);
                     });
                     
@@ -132,7 +141,8 @@ function (jasmine, Stream, Insert, Writable, Readable, Duplex) {
                     describe('and has .pipe(writable stream)', function () {
                         var writeStream;
                         beforeEach(function () {
-//                            writeStream =
+                            writeStream = new Writable();
+                            writeStream._write = function () {};
                             inserter.pipe(writeStream);
                         });
                         
@@ -149,6 +159,7 @@ function (jasmine, Stream, Insert, Writable, Readable, Duplex) {
 
                         it('can be re-enabled using .enable() to continue the counter and read from source', function () {
                             inserter.disable();
+                            inserter.enable();
                             
                             expect(inserter._enabled).toBe(true);
                             throw 'TODO (joao) Make sure mixing has resumed';

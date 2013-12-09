@@ -34,7 +34,7 @@ function (jasmine, Stream, Readable, Writable, util) {
                 }, '_read to be called');
                 runs(function () {
                     expect(stream._read).toHaveBeenCalled();
-                })
+                });
             });
             it('emits a data event', function () {
                 var onData = jasmine.createSpy('onData');
@@ -71,7 +71,7 @@ function (jasmine, Stream, Readable, Writable, util) {
                         expect(chunk).toBe(items[0]);
                     });
                 });
-            })
+            });
         });
 
         describe('.push', function () {
@@ -152,8 +152,8 @@ function (jasmine, Stream, Readable, Writable, util) {
                             setTimeout(function () {
                                 stream.read(0);
                             }, 100);
-                        }, 50)
-                    }
+                        }, 50);
+                    };
                     onEndSpy = jasmine.createSpy('onEndSpy');
                     spyOn(stream, '_read').andCallThrough();
                     spyOn(stream, 'push').andCallThrough();
@@ -179,7 +179,7 @@ function (jasmine, Stream, Readable, Writable, util) {
                         // Readable shouldn't have been called
                         // after the initial one on construction
                         expect(onReadableSpy.callCount).toBe(1);
-                    })
+                    });
                     waitsFor(function () {
                         return stream._read.callCount === 2;
                     });

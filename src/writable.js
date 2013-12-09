@@ -48,7 +48,7 @@ define(['stream', 'stream/util', 'inherits'], function (Stream, util, inherits) 
     };
 
 
-    Writable.prototype._write = function(chunk, errback) {
+    Writable.prototype._write = function (chunk, errback) {
         errback(new Error('._write not implemented'));
     };
 

@@ -169,7 +169,8 @@ function (PassThrough, Readable, Writable, util, inherits) {
         console.log('_insert()');
         var chunk = this._source.read(1);
         if (chunk) {
-            chunk.createdAt = new Date(this._timestamp + 1);
+            //TODO (joao) Get rid of this. Too specific to LivefyreContent
+//            chunk.createdAt = new Date(this._timestamp + 1);
             chunk.body = 'source';
 //            debugger
             this._doWrite(chunk, function () {
@@ -197,9 +198,9 @@ function (PassThrough, Readable, Writable, util, inherits) {
     
     Inserter.prototype._write = function (chunk, errback) {
         PassThrough.prototype._write.call(this, chunk, errback);
-        this._timestamp = chunk.createdAt.getTime();
+//        this._timestamp = chunk.createdAt.getTime();
 //        chunk.body = 'written';
-        if (!this._freeFlow) {
+        if (!this._freeFlow && this._enabled) {
             this._counter++;
             if (this._counter === this._interval) {
                 this._insert();//Will reset the counter.

@@ -1,11 +1,13 @@
-define(['jasmine', 'stream', 'stream/insert', 'stream/writable', 'stream/readable', 'stream/duplex', 'stream/passthrough'],
-function (jasmine, Stream, Insert, Writable, Readable, Duplex, PassThrough) {
+define(['jasmine', 'stream', 'stream/insert', 'stream/writable', 'stream/readable', 'stream/duplex', 'stream/passthrough', 'stream/contrib/readable-array', 'stream/contrib/writable-array'],
+function (jasmine, Stream, Insert, Writable, Readable, Duplex, PassThrough, ReadableArray, WritableArray) {
     describe('stream/insert', function () {
         var sourceStream,
+            sourceSpy,
             inserter;
         beforeEach(function () {
             //TODO (joao) Make ths Readable with _read() defined
-            sourceStream = new PassThrough();
+            sourceStream = new Readable();
+            sourceSpy = spyOn(sourceStream, '_read').andCallFake(function () { console.log('source read'); });
         });
             
         it('is a function', function () {
@@ -124,58 +126,124 @@ function (jasmine, Stream, Insert, Writable, Readable, Duplex, PassThrough) {
                         
                         expect(retVal).toBe(inserter);
                     });
-
-                    it('streams without inhibition if set to 0', function () {throw 'TODO (joao) Write this test.';});
+//TODO (joao) Potential upgrade
+//                    it('streams without inhibition if set to 0', function () {throw 'TODO (joao) Write this test.';});
                 });
 
                 describe('is passed to a readable stream.pipe()', function () {
-                    var readStream;
+                    var readStream,
+                        onReadEndSpy;
                     beforeEach(function () {
-                        readStream = new Readable();
-                        readStream._read = function () {};
-                        readStream.pipe(inserter);
+                        inserter.every(2);//Set insertion interval to 2
+                        sourceStream.push('_insert_');
+                        readStream = new ReadableArray([1,2,3]);
+                        onReadEndSpy = jasmine.createSpy('onReadableEnd');
+                        readStream.on('end', onReadEndSpy);
+//                        readStream.pipe(inserter);
                     });
                     
-                    it('reads from the stream', function () {throw 'TODO (joao) Write this test.';});
-
                     describe('and has .pipe(writable stream)', function () {
                         var writeStream;
                         beforeEach(function () {
-                            writeStream = new Writable();
-                            writeStream._write = function () {};
+                            writeStream = new WritableArray();
                             inserter.pipe(writeStream);
                         });
                         
-                        it('writes to the writable stream each piece of content it reads from the readable stream and increments counter', function () {throw 'TODO (joao) Write this test.';});
+                        it('writes to the writable stream each piece of content it reads from the readable stream and increments counter', function () {
+                            inserter.every(10);
+                            readStream.pipe(inserter);
+                            
+                            waitsFor(function () {
+                                return onReadEndSpy.callCount;
+                            }, 'readStream to emit end', 1000);
+                            runs(function () {
+                                expect(writeStream.get()).toEqual([1,2,3]);
+                            });
+                        });
 
-                        it('writes one piece of source content for every [interval] number of stream content(s) it reads', function () {throw 'TODO (joao) Write this test.';});
+                        it('writes one piece of source content for every [interval] number of stream content(s) it reads', function () {
+                            readStream.pipe(inserter);
+                            
+                            waitsFor(function () {
+                                return onReadEndSpy.callCount;
+                            }, 'readStream to emit end', 1000);
+                            runs(function () {
+                                expect(writeStream.get()).toEqual([1,2,'_insert_',3]);
+                            });
+                        });
 
                         it('can be disabled using .disable() to pause the counter and stop it from reading from source', function () {
                             inserter.disable();
+                            readStream.pipe(inserter);
                             
                             expect(inserter._enabled).toBe(false);
-                            throw 'TODO (joao) Make sure mixing has actually stopped';
+                            waitsFor(function () {
+                                return onReadEndSpy.callCount;
+                            }, 'readStream to emit end', 1000);
+                            runs(function () {
+                                //Make sure insertion didn't occur
+                                expect(writeStream.get()).toEqual([1,2,3]);
+                            });
                         });
 
                         it('can be re-enabled using .enable() to continue the counter and read from source', function () {
                             inserter.disable();
                             inserter.enable();
+                            readStream.pipe(inserter);
                             
                             expect(inserter._enabled).toBe(true);
-                            throw 'TODO (joao) Make sure mixing has resumed';
+                            waitsFor(function () {
+                                return onReadEndSpy.callCount;
+                            }, 'readStream to emit end', 1000);
+                            runs(function () {
+                                //Make sure insertion occured
+                                expect(writeStream.get()).toEqual([1,2,'_insert_',3]);
+                            });
                         });
 
                         it('can have its counter reset using .reset()', function () {
-                            throw 'TODO (joao) Stream some';
+                            inserter.every(10);
+                            readStream.pipe(inserter);
                             
-                            inserter.reset();
-                            
-                            expect(inserter._counter).toBe(0);
+                            waitsFor(function () {
+                                return onReadEndSpy.callCount;
+                            }, 'readStream to emit end', 1000);
+                            runs(function () {
+                                expect(inserter._counter).toBe(3);
+                                inserter.reset();
+                                expect(inserter._counter).toBe(0);
+                            });
                         });
 
-                        it('can read source and bypass the counter by using .now()', function () {throw 'TODO (joao) Write this test.';});
+                        it('can read source and bypass the counter by using .now()', function () {
+                            inserter.every(10);
+                            readStream.pipe(inserter);
+                            
+                            waitsFor(function () {
+                                return onReadEndSpy.callCount;
+                            }, 'readStream to emit end', 1000);
+                            runs(function () {
+                                expect(writeStream.get()).toEqual([1,2,3]);
+                                inserter.now();
+                                expect(writeStream.get()).toEqual([1,2,3,'_insert_']);
+                            });
+                        });
 
-                        it('reads from source and resets counter if .every(n) called with  n < counter', function () {throw 'TODO (joao) Write this test.';});
+                        it('reads from source and resets counter if .every(n) called with  n < counter', function () {
+                            inserter.every(10);
+                            readStream.pipe(inserter);
+                            
+                            waitsFor(function () {
+                                return onReadEndSpy.callCount;
+                            }, 'readStream to emit end', 1000);
+                            runs(function () {
+                                expect(writeStream.get()).toEqual([1,2,3]);
+                                expect(inserter._counter).toBe(3);
+                                inserter.every(2);
+                                expect(inserter._counter).toBe(0);
+                                expect(writeStream.get()).toEqual([1,2,3,'_insert_']);
+                            });
+                        });
                     });
                 });
             });

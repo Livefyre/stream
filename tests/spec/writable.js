@@ -92,7 +92,7 @@ function (jasmine, Stream, Writable, util) {
                 stream = new Writable();
                 stream._write = function (chunk, done) {
                     done();
-                }
+                };
             });
             it('is a method on Writables', function () {
                 expect(stream.write).toEqual(jasmine.any(Function));

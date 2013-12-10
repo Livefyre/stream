@@ -217,7 +217,7 @@ function (jasmine, Stream, Insert, Writable, Readable, Duplex, PassThrough, Read
 
                         it('can read source and bypass the counter by using .now()', function () {
                             inserter.every(10);
-                            readStream.pipe(inserter);
+                            readStream.pipe(inserter, {end: false});
                             
                             waitsFor(function () {
                                 return onReadEndSpy.callCount;
@@ -231,7 +231,7 @@ function (jasmine, Stream, Insert, Writable, Readable, Duplex, PassThrough, Read
 
                         it('reads from source and resets counter if .every(n) called with  n < counter', function () {
                             inserter.every(10);
-                            readStream.pipe(inserter);
+                            readStream.pipe(inserter, {end: false});
                             
                             waitsFor(function () {
                                 return onReadEndSpy.callCount;

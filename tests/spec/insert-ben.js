@@ -1,7 +1,7 @@
 define([
     'jasmine',
     'stream',
-    'stream/insert',
+    'stream/ben-insert',
     'stream/writable',
     'stream/readable',
     'stream/duplex',
@@ -11,7 +11,7 @@ define([
     'inherits'],
 function (jasmine, Stream, Insert, Writable, Readable, Duplex, PassThrough,
 ReadableArray, WritableArray, inherits) {
-    describe('stream/insert', function () {
+    describe('stream/insert-ben', function () {
         var sourceStream,
             sourceSpy,
             inserter;
@@ -95,6 +95,7 @@ ReadableArray, WritableArray, inherits) {
             });
         });
 
+    /*
         beforeEach(function () {
             //TODO (joao) Make ths Readable with _read() defined
             sourceStream = new Readable();
@@ -339,5 +340,6 @@ ReadableArray, WritableArray, inherits) {
                 });
             });
         });
+    */
     });
 });

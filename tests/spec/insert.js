@@ -1,9 +1,39 @@
-define(['jasmine', 'stream', 'stream/insert', 'stream/writable', 'stream/readable', 'stream/duplex', 'stream/passthrough', 'stream/contrib/readable-array', 'stream/contrib/writable-array'],
-function (jasmine, Stream, Insert, Writable, Readable, Duplex, PassThrough, ReadableArray, WritableArray) {
+define([
+    'jasmine',
+    'stream',
+    'stream/insert',
+    'stream/writable',
+    'stream/readable',
+    'stream/duplex',
+    'stream/passthrough',
+    'stream/contrib/readable-array',
+    'stream/contrib/writable-array',
+    'inherits'],
+function (jasmine, Stream, Insert, Writable, Readable, Duplex, PassThrough,
+ReadableArray, WritableArray, inherits) {
     describe('stream/insert', function () {
         var sourceStream,
             sourceSpy,
             inserter;
+
+        describe('bens tests', function () {
+            it('works with pipe', function () {
+                var ones = new ReadableArray([1,1,1,1,1]);
+                var twos = new ReadableArray([2,2,2,2,2]);
+                var inserter = Insert(twos).every(1);
+                var writable = new WritableArray();
+
+                ones.pipe(inserter).pipe(writable);
+
+                waitsFor(function () {
+                    return writable.get().length === 7;
+                });
+                runs(function () {
+                    expect(writable.get()).toBe([1,2,1,2,1,2,1,2,1,2]);
+                });
+            });
+        });
+
         beforeEach(function () {
             //TODO (joao) Make ths Readable with _read() defined
             sourceStream = new Readable();

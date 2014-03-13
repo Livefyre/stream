@@ -310,9 +310,9 @@ function (Stream, util, EventEmitter, inherits) {
                 this._maybeReadMore();
             }
         }
-        
+
         // Return whether
-        return ! state.ended && 
+        return ! state.ended &&
                ( state.needReadable ||
                  state.buffer.length < state.highWaterMark ||
                  state.buffer.length === 0);
@@ -466,7 +466,7 @@ function (Stream, util, EventEmitter, inherits) {
             ret;
 
         state.calledRead = true;
-        
+
         if (typeof size !== 'number' || size > 0) {
             // User wants data. We'll need to emit readable
             state.emittedReadable = false;
@@ -617,7 +617,7 @@ function (Stream, util, EventEmitter, inherits) {
             state.emittedReadable = true;
             if (state.sync) {
                 util.nextTick(emitReadable);
-            } else {
+            } else if (state.flowing) {
                 emitReadable();
             }
         }

@@ -1,6 +1,6 @@
 "use strict";
 var inherits = require('inherits');
-var EventEmitter = require('event-emitter');
+var EventEmitter = require('events').EventEmitter;
 
 /**
  * Base class for all Streams
@@ -8,4 +8,5 @@ var EventEmitter = require('event-emitter');
 var Stream = module.exports = function Stream (opts) {
     EventEmitter.call(this);
 };
+
 inherits(Stream, EventEmitter);

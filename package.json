@@ -1,5 +1,5 @@
 {
-  "name": "stream",
+  "name": "iso-stream",
   "description": "Browser-compatible implementation of Node 0.10.x streams2 objects",
   "author": "Livefyre <support@livefyre.com>",
   "contributors": {
@@ -7,6 +7,7 @@
     "email": "ben@livefyre.com"
   },
   "version": "0.2.1",
+  "main": "src/main.js",
   "devDependencies": {
     "bower": "1.0.0",
     "http-server": "*",
@@ -18,6 +19,8 @@
     "hint": "./node_modules/jshint/bin/jshint src/ tests/; echo"
   },
   "dependencies": {
+    "events": "^1.0.1",
+    "inherits": "^2.0.1",
     "util-extend": "^1.0.1"
   }
 }

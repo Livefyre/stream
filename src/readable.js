@@ -1,7 +1,7 @@
 'use strict';
 var Stream = require('./stream');
 var util = require('./util');
-var EventEmitter = require('event-emitter');
+var EventEmitter = require('events').EventEmitter;
 var inherits = require('inherits');
 
 

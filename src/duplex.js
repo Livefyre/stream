@@ -2,8 +2,17 @@ var Readable = require('./readable');
 var Writable = require('./writable');
 var util = require('./util');
 var inherits = require('inherits');
+var extend = require('util-extend');
 
-var Duplex = module.exports = function Duplex (opts) {
+module.exports = Duplex;
+
+var objectKeys = Object.keys || function (obj) {
+  var keys = [];
+  for (var key in obj) keys.push(key);
+  return keys;
+}
+
+function Duplex (opts) {
 	Readable.call(this, opts);
 	Writable.call(this, opts);
 
@@ -24,7 +33,11 @@ var Duplex = module.exports = function Duplex (opts) {
 }
 
 inherits(Duplex, Readable);
-inherits.parasitically(Duplex, Writable);
+
+forEach(objectKeys(Writable.prototype), function(method) {
+  if (!Duplex.prototype[method])
+    Duplex.prototype[method] = Writable.prototype[method];
+});
 
 // Enforce noHalfOpen
 function onend () {
@@ -39,4 +52,10 @@ function onend () {
 	util.nextTick(function () {
 		self.end();
 	});
+}
+
+function forEach (xs, f) {
+  for (var i = 0, l = xs.length; i < l; i++) {
+    f(xs[i], i);
+  }
 }

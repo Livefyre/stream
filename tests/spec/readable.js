@@ -1,5 +1,7 @@
-define(['jasmine', 'stream/stream', 'stream/readable', 'stream/writable', 'stream/util', 'event-emitter'],
-function (jasmine, Stream, Readable, Writable, util, EventEmitter) {
+define(['jasmine', 'stream/stream', 'stream/readable', 'stream/writable', 'stream/util', 'events'],
+function (jasmine, Stream, Readable, Writable, util, events) {
+    var EventEmitter = events.EventEmitter;
+
     describe('stream/readable', function () {
         describe('when constructed', function () {
             var stream;

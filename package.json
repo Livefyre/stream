@@ -6,12 +6,13 @@
     "name": "Benjamin Goering",
     "email": "ben@livefyre.com"
   },
-  "version": "0.2.1",
+  "version": "0.2.1-pre.0",
   "devDependencies": {
+    "almond": "^0.2.9",
     "bower": "1.0.0",
     "http-server": "*",
-    "requirejs": "~2.1.6",
-    "jshint": "~1.1.0"
+    "jshint": "~1.1.0",
+    "requirejs": "~2.1.6"
   },
   "scripts": {
     "start": "./node_modules/http-server/bin/http-server .",

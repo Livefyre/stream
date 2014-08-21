@@ -1,13 +1,13 @@
 {
   "name": "stream",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "main": [
     "./src/main.js"
   ],
   "dependencies": {
     "requirejs": "~2.1.5",
     "event-emitter": "https://github.com/Livefyre/event-emitter.git",
-    "inherits": "git@github.com:gobengo/inherits.git"
+    "inherits": "Livefyre/inherits"
   },
   "devDependencies": {
     "jasmine": "*",

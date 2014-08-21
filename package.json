@@ -6,10 +6,10 @@
     "name": "Benjamin Goering",
     "email": "ben@livefyre.com"
   },
-  "version": "0.2.1-pre.0",
+  "version": "0.2.2",
   "devDependencies": {
     "almond": "^0.2.9",
-    "bower": "1.0.0",
+    "bower": "1.3.8",
     "http-server": "*",
     "jshint": "~1.1.0",
     "requirejs": "~2.1.6"
